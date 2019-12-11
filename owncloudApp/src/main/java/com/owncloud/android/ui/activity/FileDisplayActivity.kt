@@ -59,6 +59,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.owncloud.android.AppRater
 import com.owncloud.android.MainApp
 import com.owncloud.android.R
+import com.owncloud.android.authentication.AccountUtils
 import com.owncloud.android.authentication.FingerprintManager
 import com.owncloud.android.authentication.PassCodeManager
 import com.owncloud.android.authentication.PatternManager
@@ -504,7 +505,7 @@ class FileDisplayActivity : FileActivity(), FileFragment.ContainerActivity, OnEn
         updateActionBarTitleAndHomeButton(null)
     }
 
-     fun refreshListOfFilesFragment(reloadData: Boolean) {
+    fun refreshListOfFilesFragment(reloadData: Boolean) {
         val fileListFragment = listOfFilesFragment
         fileListFragment?.listDirectory(reloadData)
     }
@@ -973,13 +974,13 @@ class FileDisplayActivity : FileActivity(), FileFragment.ContainerActivity, OnEn
                                     launch {
                                         if (credentials is OwnCloudBearerCredentials) { // OAuth
                                             showRequestRegainAccess()
+                                        } else if (!AccountUtils.getServerVersion(account)?.isServerVersionSupported!!){
+                                            showRequestAccountChangeNotice(getString(R.string.server_not_supported))
                                         } else {
-                                            showRequestAccountChangeNotice()
+                                            showRequestAccountChangeNotice(getString(R.string.auth_failure_snackbar))
                                         }
                                     }
                                 }
-
-                                showRequestAccountChangeNotice()
                             } else if (ResultCode.SSL_RECOVERABLE_PEER_UNVERIFIED == synchResult.code) {
                                 showUntrustedCertDialog(synchResult)
                             }
@@ -1003,12 +1004,12 @@ class FileDisplayActivity : FileActivity(), FileFragment.ContainerActivity, OnEn
             } else if (synchResult?.code == ResultCode.SPECIFIC_SERVICE_UNAVAILABLE) {
                 if (synchResult.httpCode == 503) {
                     if (synchResult.httpPhrase == "Error: Call to a member function getUID() on null") {
-                        showRequestAccountChangeNotice()
+                        showRequestAccountChangeNotice(getString(R.string.auth_failure_snackbar))
                     } else {
                         showSnackMessage(synchResult.httpPhrase)
                     }
                 } else {
-                    showRequestAccountChangeNotice()
+                    showRequestAccountChangeNotice(getString(R.string.auth_failure_snackbar))
                 }
             }
         }
